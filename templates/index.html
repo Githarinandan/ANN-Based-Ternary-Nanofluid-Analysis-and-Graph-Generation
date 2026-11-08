@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Research Graph Studio | Scientific Graph Generator{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <h1>Advanced Visualization for<span> Computational Fluid Dynamics Research.</span></h1>
+    <p>Choose a graph, enter your numerical values, and generate a clear scientific figure with axis labels, legends, metrics and an interpretation panel.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="#graph-catalog">Generate graphs <span aria-hidden="true">↓</span></a>
+    </div>
+  </div>
+  <div class="hero-art" aria-label="Illustration of scientific graphs">
+    <div class="art-glow"></div>
+    <div class="art-card art-card-main">
+      <div class="art-card-head"><span>VELOCITY PROFILE</span><span class="live-dot"></span></div>
+      <svg viewBox="0 0 440 230" role="img" aria-label="Illustrative multi-line scientific chart">
+        <defs><linearGradient id="areaA" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#557de8" stop-opacity=".25"/><stop offset="1" stop-color="#557de8" stop-opacity="0"/></linearGradient></defs>
+        <g stroke="#e9eef7" stroke-width="1"><path d="M48 25H420M48 65H420M48 105H420M48 145H420M48 185H420"/><path d="M48 25V185M140 25V185M232 25V185M324 25V185M416 25V185"/></g>
+        <path d="M48 28 C95 48 118 85 166 112 S280 160 416 177 L416 185 L48 185Z" fill="url(#areaA)"/>
+        <path d="M48 28 C95 48 118 85 166 112 S280 160 416 177" fill="none" stroke="#557de8" stroke-width="4" stroke-linecap="round"/>
+        <path d="M48 77 C102 85 135 105 185 127 S310 157 416 166" fill="none" stroke="#18a58d" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M48 118 C96 126 134 139 188 151 S318 169 416 176" fill="none" stroke="#ee9d47" stroke-width="3.5" stroke-linecap="round"/>
+        <g fill="#8190a8" font-size="10" font-family="DM Sans, sans-serif"><text x="44" y="205">0</text><text x="134" y="205">1</text><text x="226" y="205">2</text><text x="318" y="205">3</text><text x="404" y="205">η</text></g>
+      </svg>
+      <div class="art-legend"><span><i class="legend-blue"></i> Case A</span><span><i class="legend-green"></i> Case B</span><span><i class="legend-orange"></i> Case C</span></div>
+    </div>
+    <div class="art-chip art-chip-one"><span class="chip-icon">↗</span><span><b>Multi-series</b><small>side-by-side comparison</small></span></div>
+    <div class="art-chip art-chip-two"><span class="chip-icon chip-green">✓</span><span><b>Research notes</b><small>interpretation included</small></span></div>
+  </div>
+</section>
+
+<section class="catalog-section" id="graph-catalog">
+  <div class="section-heading">
+    <div><h2>Graph Generator</h2></div>
+  </div>
+  <div>
+    <p>Select a graph from there thst you want to generate, enter the corresponding X-axis and Y-axis numerical values, and customize the graph title, labels, and parameters. Click Generate Graph to create an interactive scientific visualization, review the generated results, and export the graph in publication-ready formats.</p>
+  </div>
+
+  <div class="category-head"><span class="category-number">01</span><div><h3>Physical simulation graphs</h3><p>Generate graphical profiles for primary velocity f′(η), secondary velocity h(η), temperature θ(η), and concentration χ(η). Analyse the effects of dimensionless parameters such as Hall parameter (m), magnetic parameter (M), rotation parameter (Rp), and radiation parameter (Rd). Compare numerical profiles to examine fluid velocity, thermal distribution, and mass diffusion characteristics.</p></div><span class="category-count"></span></div>
+  <div class="tool-grid">
+    {% for page in profile_pages.values() %}
+      <a class="tool-card" href="{{ url_for('graph_page', slug=page.slug) }}">
+        <div class="tool-card-top"><span class="tool-icon icon-blue">{{ page.icon }}</span><span class="card-arrow">↗</span></div>
+        <h4>{{ page.title }}</h4><div class="math-label">{{ page.symbol }}</div>
+        <p>{{ page.description }}</p>
+        <span class="card-link">Open graph page <b>→</b></span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="category-head category-spaced"><span class="category-number">02</span><div><h3>Engineering Parameter Analysis Graphs</h3><p>Analyse the effects of dimensionless parameters (M, m, Rp, Rd, Sr, Df) on primary and secondary skin friction coefficients (Cfx, Cfy), Nusselt number (Nux), and Sherwood number (Shx). Evaluate changes in wall shear stress, heat-transfer and mass-transfer rates using percentage variation (ΔQ%) and comparative numerical analysis to understand ternary nanofluid transport behaviour.</p></div><span class="category-count"></span></div>
+  <div class="tool-grid">
+    {% for page in sensitivity_pages.values() %}
+      <a class="tool-card" href="{{ url_for('graph_page', slug=page.slug) }}">
+        <div class="tool-card-top"><span class="tool-icon icon-teal">{{ page.icon }}</span><span class="card-arrow">↗</span></div>
+        <h4>{{ page.title }}</h4><div class="math-label">{{ page.symbol }}</div>
+        <p>{{ page.description }}</p>
+        <span class="card-link">Open graph page <b>→</b></span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="category-head category-spaced"><span class="category-number">03</span><div><h3>ANN evaluation</h3><p>Evaluate Artificial Neural Network performance through error distribution, regression analysis, and training validation plots. Compare actual and predicted values, examine prediction accuracy using regression coefficients, and assess model performance through Mean Squared Error (MSE) to understand prediction reliability and generalization.</p></div><span class="category-count"></span></div>
+  <div class="tool-grid tool-grid-three">
+    {% for page in ann_pages.values() %}
+      <a class="tool-card" href="{{ url_for('ann_page', slug=page.slug) }}">
+        <div class="tool-card-top"><span class="tool-icon icon-violet">{{ page.icon }}</span><span class="card-arrow">↗</span></div>
+        <h4>{{ page.title }}</h4>
+        <p>{{ page.description }}</p>
+        <span class="card-link">Open graph page <b>→</b></span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+
+{% endblock %}

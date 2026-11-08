@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}{{ config.title }} | Research Graph Studio{% endblock %}
+{% block content %}
+<div class="breadcrumbs"><a href="{{ url_for('index') }}">Graph catalog</a><span>/</span><span>{{ config.category }}</span><span>/</span><strong>{{ config.title }}</strong></div>
+<section class="page-intro">
+  <div class="page-intro-copy">
+    <div class="eyebrow">{{ config.category|upper }}</div>
+    <h1>{{ config.title }}{% if config.symbol is defined %} <span class="title-symbol">{{ config.symbol }}</span>{% endif %}</h1>
+    <p>{{ config.description }}</p>
+  </div>
+  <a class="button button-quiet back-button" href="{{ url_for('index') }}">Homepage</a>
+</section>
+
+{% if error %}
+  <div class="notice notice-error" role="alert"><strong>We couldn't generate this graph.</strong><span>{{ error }}</span></div>
+{% endif %}
+
+<div class="workspace-grid">
+  <section class="form-panel panel">
+    <div class="panel-heading">
+      <div><span class="step-kicker">GRAPH INPUT</span><h2>Enter your numerical values</h2></div>
+      <span class="panel-icon">⌗</span>
+    </div>
+    <p class="panel-lead">{{ config.guidance }}</p>
+
+    <form method="post" action="" class="graph-form" id="graph-form">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <div class="field-group">
+        <label for="graph_title">Graph title</label>
+        <input id="graph_title" name="graph_title" type="text" maxlength="120" value="{{ form_state.get('graph_title', config.title) }}" placeholder="Enter a descriptive graph title">
+      </div>
+
+      {% if config.kind in ['profile', 'sensitivity'] %}
+        <div class="field-group">
+          <label for="x_values">X-axis values <span class="required-mark">required</span></label>
+          <textarea id="x_values" name="x_values" rows="3" required placeholder="Example: 0, 0.5, 1, 1.5, 2">{{ form_state.get('x_values', '') }}</textarea>
+          <small>Separate values with commas, spaces, semicolons or line breaks. Use a decimal point for decimal numbers.</small>
+        </div>
+        <div class="field-grid {% if config.kind == 'profile' %}two-fields{% endif %}">
+          <div class="field-group">
+            <label for="x_label">X-axis label</label>
+            <input id="x_label" name="x_label" type="text" maxlength="100" value="{{ form_state.get('x_label', config.get('x_axis', 'Selected parameter value')) }}">
+          </div>
+          {% if config.kind == 'profile' %}
+            <div class="field-group">
+              <label for="y_label">Y-axis label</label>
+              <input id="y_label" name="y_label" type="text" maxlength="100" value="{{ form_state.get('y_label', config.y_axis) }}">
+            </div>
+          {% else %}
+            <div class="field-group">
+              <label>Y-axis quantity</label>
+              <div class="readonly-field">{{ config.y_axis }}</div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="series-heading">
+          <div><label>Output series</label><small>Each series becomes a separate coloured curve.</small></div>
+          <button type="button" class="button button-outline button-small" id="add-series">＋ Add case</button>
+        </div>
+        <div id="series-list" class="series-list">
+          {% for series in form_state.get('series', [{'label':'Case 1','values':''}]) %}
+          <div class="series-row" data-series-row>
+            <div class="series-row-head"><span class="series-index">CASE {{ loop.index }}</span><button type="button" class="remove-series" aria-label="Remove this series" title="Remove this series">×</button></div>
+            <div class="field-group compact-field"><label>Curve label</label><input name="series_label[]" type="text" maxlength="80" value="{{ series.get('label', 'Case ' ~ loop.index) }}" placeholder="e.g. Hall parameter m = 0.5"></div>
+            <div class="field-group compact-field"><label>Y-axis values</label><textarea name="series_values[]" rows="2" required placeholder="Enter {{ config.symbol if config.symbol is defined else 'output' }} values in the same order as X">{{ series.get('values', '') }}</textarea></div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="field-group">
+          <label for="fixed_conditions">Other conditions held fixed <span class="optional-mark">optional</span></label>
+          <input id="fixed_conditions" name="fixed_conditions" type="text" maxlength="500" value="{{ form_state.get('fixed_conditions', '') }}" placeholder="e.g. M = 0.5, Rp = 0.2, all other parameters fixed">
+          <small>This note is shown beside the graph. It is not used to modify the numerical values.</small>
+        </div>
+        <button type="button" class="text-button sample-button" data-sample-profile
+          data-example-x="{{ config.example_x }}" data-example-y="{{ config.example_y }}" data-example-label="{{ config.example_label }}">Fill sample values</button>
+      {% elif config.kind in ['ann_error', 'ann_regression'] %}
+        <div class="field-group">
+          <label for="ann_target">ANN output quantity</label>
+          <select id="ann_target" name="ann_target" class="select-control">
+            {% for target in ['Cfx', 'Cfy', 'Nux', 'Shx'] %}
+              <option value="{{ target }}" {% if form_state.get('ann_target', 'Cfx') == target %}selected{% endif %}>{{ target }}{% if target == 'Cfx' %} — primary skin friction{% elif target == 'Cfy' %} — secondary skin friction{% elif target == 'Nux' %} — Nusselt number{% else %} — Sherwood number{% endif %}</option>
+            {% endfor %}
+          </select>
+          <small>This labels the result. Enter values for the selected quantity only.</small>
+        </div>
+        <div class="field-group">
+          <label for="actual_values">Actual / target values <span class="required-mark">required</span></label>
+          <textarea id="actual_values" name="actual_values" rows="4" required placeholder="Example: 1.2, 1.5, 1.8, 2.0, 2.4">{{ form_state.get('actual_values', '') }}</textarea>
+        </div>
+        <div class="field-group">
+          <label for="predicted_values">ANN predicted / output values <span class="required-mark">required</span></label>
+          <textarea id="predicted_values" name="predicted_values" rows="4" required placeholder="Example: 1.21, 1.48, 1.82, 1.99, 2.39">{{ form_state.get('predicted_values', '') }}</textarea>
+          <small>Both lists must contain the same number of values and be in matching observation order.</small>
+        </div>
+        <button type="button" class="text-button sample-button" data-sample-ann>Fill illustrative sample values</button>
+        <p class="sample-warning">Sample values are fictional demonstration values, not the paper's ANN observations.</p>
+
+      {% elif config.kind == 'ann_performance' %}
+        <div class="field-group">
+          <label for="ann_target">ANN output quantity</label>
+          <select id="ann_target" name="ann_target" class="select-control">
+            {% for target in ['Cfx', 'Cfy', 'Nux', 'Shx'] %}
+              <option value="{{ target }}" {% if form_state.get('ann_target', 'Cfx') == target %}selected{% endif %}>{{ target }}{% if target == 'Cfx' %} — primary skin friction{% elif target == 'Cfy' %} — secondary skin friction{% elif target == 'Nux' %} — Nusselt number{% else %} — Sherwood number{% endif %}</option>
+            {% endfor %}
+          </select>
+          <small>Use epoch-by-epoch training history for this output quantity.</small>
+        </div>
+        <div class="field-group">
+          <label for="epochs">Epoch values <span class="required-mark">required</span></label>
+          <textarea id="epochs" name="epochs" rows="2" required placeholder="Example: 1, 2, 3, 4, 5">{{ form_state.get('epochs', '') }}</textarea>
+        </div>
+        <div class="field-group">
+          <label for="training_mse">Training MSE <span class="required-mark">required</span></label>
+          <textarea id="training_mse" name="training_mse" rows="2" required placeholder="Enter one MSE value for every epoch">{{ form_state.get('training_mse', '') }}</textarea>
+        </div>
+        <div class="field-group">
+          <label for="validation_mse">Validation MSE <span class="required-mark">required</span></label>
+          <textarea id="validation_mse" name="validation_mse" rows="2" required placeholder="Enter one MSE value for every epoch">{{ form_state.get('validation_mse', '') }}</textarea>
+        </div>
+        <div class="field-group">
+          <label for="testing_mse">Testing MSE <span class="optional-mark">optional</span></label>
+          <textarea id="testing_mse" name="testing_mse" rows="2" placeholder="Optional: enter one value for every epoch">{{ form_state.get('testing_mse', '') }}</textarea>
+        </div>
+        <button type="button" class="text-button sample-button" data-sample-performance>Fill illustrative sample values</button>
+        <p class="sample-warning">The sample training history is fictional. The research paper's final MSE table does not provide a full epoch-by-epoch history.</p>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="button button-primary button-generate"><span>Generate graph</span><span aria-hidden="true">↗</span></button>
+        <button type="reset" class="button button-quiet">Clear form</button>
+      </div>
+    </form>
+  </section>
+
+  <aside class="guide-column">
+    <div class="panel guide-panel">
+      <div class="guide-icon">ⓘ</div>
+      <h3>What this graph means</h3>
+      <p>{{ config.description }}</p>
+      <div class="guide-divider"></div>
+      {% if config.meaning is defined %}
+        <div class="guide-subhead">Scientific meaning</div><p>{{ config.meaning }}</p>
+      {% endif %}
+      <div class="guide-subhead">Research-paper context</div>
+      <p>{{ config.paper_context }}</p>
+    </div>
+  </aside>
+</div>
+
+{% if result %}
+<section class="results-section" id="generated-graph">
+  <div class="results-heading">
+    <div><div class="eyebrow">GRAPH GENERATED</div><h2>{{ result.title }}</h2><p>Your values have been plotted. Review the interpretation and summary before exporting.</p></div>
+    <a class="button button-primary" href="{{ result.png }}" download="research-graph.png">↓ Download high-resolution PNG</a>
+  </div>
+  <div class="results-grid">
+    <div class="visual-results">
+      <div class="panel chart-panel">
+        <div class="chart-panel-heading"><div><span class="step-kicker">PUBLICATION-STYLE FIGURE</span><h3>Static graph preview</h3></div><span class="chart-tag">Seaborn + Matplotlib</span></div>
+        <img class="static-graph" src="{{ result.png }}" alt="Generated scientific graph: {{ result.title }}">
+        <div class="chart-caption">High-resolution raster preview. Use the download button for the PNG export.</div>
+      </div>
+      <div class="panel chart-panel interactive-panel">
+        <div class="chart-panel-heading"><div><span class="step-kicker">INTERACTIVE EXPLORATION</span><h3>Explore the graph</h3></div><span class="chart-tag chart-tag-interactive">Plotly</span></div>
+        <p class="chart-hint">Hover over points, zoom, pan and use the toolbar to inspect values.</p>
+        <div class="plotly-holder">{{ result.interactive|safe }}</div>
+      </div>
+    </div>
+    <aside class="analysis-column">
+      <div class="panel metrics-panel">
+        <span class="step-kicker">NUMERICAL SUMMARY</span><h3>Key values</h3>
+        <div class="metric-list">
+          {% for metric in result.metrics %}
+            <div class="metric-row"><span>{{ metric.label }}</span><strong>{{ metric.value }}</strong></div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="panel interpretation-panel">
+        <span class="step-kicker">READING THE RESULTS</span><h3>What the graph tells you</h3>
+        {% for note in result.notes %}
+          <div class="interpretation-note"><h4>{{ note.heading }}</h4><p>{{ note.text }}</p></div>
+        {% endfor %}
+      </div>
+      <div class="notice notice-info small-notice"><b>Interpretation note:</b> Summaries are calculated from the values you entered. They are not a substitute for checking model assumptions, boundary conditions or the research method.</div>
+    </aside>
+  </div>
+</section>
+{% endif %}
+
+<div class="bottom-back"><a href="{{ url_for('index') }}">← Return to graph catalog</a></div>
+{% endblock %}

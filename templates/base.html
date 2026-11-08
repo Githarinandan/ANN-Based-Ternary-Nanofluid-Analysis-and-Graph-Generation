@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d35">
+  <meta name="description" content="Generate publication-style scientific graphs from user-entered numerical data.">
+  <title>{% block title %}ANN-Based Ternary Nanofluid Analysis and Graph Generation{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}" aria-label="ANN-Based Ternary Nanofluid Analysis and Graph Generation home">
+      <span class="brand-copy"><strong>ANN-Based Ternary Nanofluid Analysis and Graph Generation</strong><small>Scientific visualization workspace</small></span>
+    </a>
+    <nav class="topnav" aria-label="Main navigation">
+  </header>
+
+  <main class="page-shell">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>ANN-Based Ternary Nanofluid Analysis and Graph Generation</span>
+      <span>Made by Harinandan S</span>
+      <span class="footer-source">Reference context: Sadiya et al. (2026), Results in Surfaces and Interfaces 24, 100844 · DOI: 10.1016/j.rsurfi.2026.100844</span>
+      <span class="footer-source">Research paper used:Hall and cross-diffusion effects on ternary nanofluid flow over a rotating stretching surface under Coriolis force: An ANN approach(A.B. Sadiya, G. Sucharitha, P. Lakshminarayana and Sachin Shaw.)</span>
+      <span class="footer-source">Online link:https://www.sciencedirect.com/science/article/pii/S2666845926001364</span>
+    </div>
+  </footer>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
